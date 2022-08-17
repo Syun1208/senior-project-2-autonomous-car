@@ -156,16 +156,15 @@ class imageProcessing:
         if len(lines1) != 0:
             avg1 = np.sum(lines1) / len(lines1)
             d = 80 - avg1
-            if d > 70:
-                return 200
-            if d - o_d < 3:
-                o_d = d
-                return d
-            else:
-                return 200
-        else:
-            o_d = 65
-            return 200
+            return d
+        #     if d - o_d < 3:
+        #         o_d = d
+        #         return d
+        #     else:
+        #         return 200
+        # else:
+        #     o_d = 65
+        #     return 200
 
     def houghLineTurnRight(self):
         pass

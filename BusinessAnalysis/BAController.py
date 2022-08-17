@@ -16,9 +16,13 @@ class Controller(imageProcessing):
         self.d = 0.05
         self.error_arr = np.zeros(5)
         self.arr_normal = []
-        self.sign = sign
+        if sign is None:
+            self.sign = 'empty'
+            self.bboxSize = 0
+        else:
+            self.sign = sign[0]
+            self.bboxSize = sign[2]
         self.center = 0
-        self.bboxSize = 1000
         self.width = np.zeros(10)
         self.error = 0
 
@@ -60,26 +64,27 @@ class Controller(imageProcessing):
         D = (error - self.error_arr[1]) / delta_t * self.d
         I = np.sum(self.error_arr) * delta_t * self.i
         angle = P + I + D
-        if abs(angle) > 3:
-            angle = np.sign(angle) * 40
+        if abs(angle) > 4:
+            angle = np.sign(angle) * 35
         return int(angle)
 
     def turnLeft(self):
         Min, Max = self.checkLane()
-        if time.time() - self.time <= 1:
+        self.speedDecrease()
+        if time.time() - self.time <= 3 or self.bboxSize >= 1600 or self.houghLine() <= 70:
+            self.center = int(Min + Max) * 1 / 4
+        return self.center
+
+    def turnRight(self):
+        Min, Max = self.checkLane()
+        if time.time() - self.time >= 5 or self.bboxSize >= 1200 or self.houghLine() <= 70:
             self.speedDecrease()
             self.center = int(Min + Max) * 3 / 4
         return self.center
 
-    def turnRight(self):
-        if time.time() - self.time < 1:
-            self.speedDecrease()
-            self.center = 120
-        return self.center
-
     def straight(self):
         Min, Max = self.checkLane()
-        if time.time() - self.time < 1:
+        if time.time() - self.time >= 3:
             if 100 <= Max <= 150 and 2 <= Min <= 70:
                 self.width[1:] = self.width[0:-1]
                 if Max - Min > 60:
@@ -96,13 +101,15 @@ class Controller(imageProcessing):
         Min, Max = self.checkLane()
         self.speedDecrease()
         if self.sign == 'carright':
-            self.center = Max - 25
+            if time.time() - self.time <= 3:
+                self.center = int(Min + Max) * 3 / 4
         elif self.sign == 'carleft':
-            self.center = Min + 20
+            if time.time() - self.time <= 3:
+                self.center = int(Min + Max) * 1 / 4
         return self.center
 
     def speedDecrease(self):
-        self.currentSpeed = 5
+        self.currentSpeed = 1
 
     def speedIncrease(self):
         self.currentSpeed = 70
@@ -112,16 +119,16 @@ class Controller(imageProcessing):
         Min, Max = self.checkLane()
         if self.sign != 'straight' or self.sign == 'nostraight':
             self.speedDecrease()
-            if time.time() - self.time >= 5:
-                if self.sign == 'turnleft' or self.sign == 'noright' or Min <= 10:
-                    self.center = self.turnLeft()
-                elif self.sign == 'turnright' or self.sign == 'noleft' or Max >= 150:
-                    self.center = self.turnRight()
-                else:
-                    self.center = self.obstacleAvoiding()
+            if self.sign == 'turnleft' or self.sign == 'noright':
+                self.center = self.turnLeft()
+            elif self.sign == 'turnright' or self.sign == 'noleft' or Max >= 150:
+                self.center = self.turnRight()
+            else:
+                self.center = self.obstacleAvoiding()
         else:
-            if time.time() - self.time >= 5:
-                if self.sign == 'noright' or self.sign == 'noleft' or self.sign == 'unknown' or not self.sign:
+            self.speedDecrease()
+            if self.sign == 'noright' or self.sign == 'noleft' or self.sign == 'unknown' or not self.sign:
+                if time.time() - self.time >= 5:
                     self.speedIncrease()
                     self.center = self.straight()
         self.error = int(self.mask.shape[1] / 2) - self.center

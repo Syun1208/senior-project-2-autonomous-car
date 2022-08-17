@@ -27,11 +27,16 @@ class detection:
                 coordinateRecognition = resultsRecognition.predict(modelRecognition)
                 bboxSize = (x_max - x_min) * (y_max - y_min)
                 if coordinateDetection.name[0] == 'car':
-                    if x_max > 160 and y_max > 150:
+                    if x_max >= 200 and y_max >= 200:
                         coordinateDetection.name[0] = 'carleft'
                         coordinateRecognition = 'carleft'
                     coordinateDetection.name[0] = 'carright'
                     coordinateRecognition = 'carright'
                 elif coordinateRecognition == 'unknown':
                     coordinateDetection.name[0] = 'unknown'
+                if coordinateRecognition is None and coordinateDetection.name[0] is None:
+                    coordinateRecognition = 'empty'
+                    coordinateDetection.name[0] = 'empty'
                 return list([coordinateRecognition, coordinateDetection.name[0], bboxSize])
+        # else:
+        #     return None
