@@ -22,11 +22,11 @@ def main():
     sendBackSpeed = 0
     sendBackAngle = 0
     MAX_SPEED = 40
-    start = time.time()
     pretrainedModel = weights()
     predictedUNET = pretrainedModel.modelUNET()
     predictedYOLOv5m = pretrainedModel.modelYOLOv5m()
     predictedCNN = pretrainedModel.modelCNN()
+    start = time.time()
     try:
         while True:
             M = Map(currentAngle, currentSpeed, sendBackAngle, sendBackSpeed)
@@ -34,11 +34,11 @@ def main():
             '''-------------------------Work Space----------------------------'''
             modelUNET = segmentation(image)
             pretrainedUNET = modelUNET.predict(predictedUNET)
-            cv2.imshow('predict', pretrainedUNET)
+            # cv2.imshow('predict', pretrainedUNET)
             IP = imageProcessing(pretrainedUNET)
             pretrainedUNET = IP.removeSmallContours()
-            ROI = IP.ROI()
-            cv2.imshow('ROI', ROI)
+            # ROI = IP.ROI()
+            # cv2.imshow('ROI', ROI)
             modelYOLOv5m = detection(image)
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             print('CNN: ', sign)
@@ -55,7 +55,7 @@ def main():
             #     sendBackSpeed = balance.speedDecrease()
             #     sendBackAngle = sendBackAngle * 2
             '''---------------------------------------------------------------'''
-            sendBackSpeed = 20
+            sendBackSpeed = 25
             print(sendBackAngle)
             print(sendBackSpeed)
             end = time.time()

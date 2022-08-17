@@ -19,7 +19,7 @@ class Map:
         self.s.connect(('127.0.0.1', self.PORT))
         message_getState = bytes("0", "utf-8")
         self.s.sendall(message_getState)
-        state_date = self.s.recv(100)
+        state_date = self.s.recv(1000)
 
         self.currentSpeed, self.currentAngle = state_date.decode(
             "utf-8"
