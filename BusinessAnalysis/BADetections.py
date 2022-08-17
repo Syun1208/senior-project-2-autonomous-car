@@ -17,7 +17,7 @@ class detection:
         coordinateDetection = resultsDetection.pandas().xyxy[0]
         '''Calculate predicted bounding box'''
         if len(coordinateDetection) != 0:
-            if float(coordinateDetection.confidence[0]) >= 0.85:
+            if float(coordinateDetection.confidence[0]) >= 0.9:
                 x_min = int(resultsDetection.xyxy[0][0][0])
                 y_min = int(resultsDetection.xyxy[0][0][1])
                 x_max = int(resultsDetection.xyxy[0][0][2])
@@ -28,10 +28,10 @@ class detection:
                 bboxSize = (x_max - x_min) * (y_max - y_min)
                 if coordinateDetection.name[0] == 'car':
                     if x_max > 160 and y_max > 150:
-                        coordinateDetection.name[0] = 'carright'
-                        coordinateRecognition = 'carright'
-                    coordinateDetection.name[0] = 'carleft'
-                    coordinateRecognition = 'carleft'
+                        coordinateDetection.name[0] = 'carleft'
+                        coordinateRecognition = 'carleft'
+                    coordinateDetection.name[0] = 'carright'
+                    coordinateRecognition = 'carright'
                 elif coordinateRecognition == 'unknown':
                     coordinateDetection.name[0] = 'unknown'
-                return coordinateDetection.name[0], coordinateRecognition, bboxSize
+                return list([coordinateRecognition, coordinateDetection.name[0], bboxSize])

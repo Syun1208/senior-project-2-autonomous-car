@@ -14,13 +14,14 @@ class weights:
     def modelUNET(self):
         predictedUNET = build_unet()
         predictedUNET = predictedUNET.to(self.device)
-        predictedUNET.load_state_dict(torch.load('D:\\SeniorProject2\\weights\\my_checkpoints.pth',
+        predictedUNET.load_state_dict(torch.load('E:\\backup\\backup\\SeniorProject2\\weights\\my_checkpoints.pth',
                                                  map_location=self.device))
         predictedUNET.eval()
         return predictedUNET
 
     def modelYOLOv5m(self):
-        predictedYOLOv5m = torch.hub.load('ultralytics/yolov5', 'custom', path='D:\\SeniorProject2\\weights\\best.pt')
+        predictedYOLOv5m = torch.hub.load('ultralytics/yolov5', 'custom',
+                                          path='E:\\backup\\backup\\SeniorProject2\\weights\\best.pt')
         predictedYOLOv5m.to(self.device)
         predictedYOLOv5m.eval()
         return predictedYOLOv5m
@@ -28,6 +29,7 @@ class weights:
     def modelCNN(self):
         modelCNN = Network()
         modelCNN.to(self.device)
-        modelCNN.load_state_dict(torch.load('D:\\SeniorProject2\\weights\\CNN.pth', map_location=self.device))
+        modelCNN.load_state_dict(torch.load('E:\\backup\\backup\\SeniorProject2\\weights\\CNN.pth',
+                                            map_location=self.device))
         modelCNN.eval()
         return modelCNN
