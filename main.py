@@ -45,6 +45,7 @@ def main():
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             '''-------------------------Controller----------------------------'''
             # balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, bboxSize)
+            sendBackSpeed = 25
             if sign is None:
                 sign = ['unknown', 'unknown', 0]
             print('CNN: ', sign)
@@ -62,7 +63,6 @@ def main():
                     sendBackSpeed = 60
                 # sendBackAngle = - balance.PIDController(error) * 5 / 19
                 print(error)
-                sendBackSpeed = 25
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     finally:
