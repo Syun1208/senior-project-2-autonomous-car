@@ -23,7 +23,7 @@ def main():
     currentSpeed = 0
     sendBackSpeed = 0
     sendBackAngle = 0
-    MAX_SPEED = 70
+    MAX_SPEED = 50
     pretrainedModel = weights()
     predictedUNET = pretrainedModel.modelUNET()
     predictedYOLOv5m = pretrainedModel.modelYOLOv5m()
@@ -36,52 +36,43 @@ def main():
             '''-------------------------Work Space----------------------------'''
             modelUNET = segmentation(image)
             pretrainedUNET = modelUNET.predict(predictedUNET)
-            cv2.imshow('predict', pretrainedUNET)
             IP = imageProcessing(pretrainedUNET)
             pretrainedUNET = IP.removeSmallContours()
-            ROI = IP.ROI()
-            cv2.imshow('ROI', ROI)
             print('Distances: ', IP.houghLine())
             modelYOLOv5m = detection(image)
-            # sign, signYOLO, bboxSize = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             '''-------------------------Controller----------------------------'''
-            # balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, bboxSize)
-            sendBackSpeed = 30
-            # if sign is None or len(sign) != 0 or not sign:
-            #     sign = list(['empty', 'empty', 0])
+            sendBackSpeed = 50
             print('CNN: ', sign)
-            balance = Controller(pretrainedUNET, start, sendBackSpeed, sign)
+            preTime = time.time()
+            timer = True
+            delayTime = 0
+            balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
             if sign:
-                sendBackSpeed = 2
+                sendBackSpeed = -5
                 error = balance.trafficSignsController()
-                sendBackAngle = - balance.PIDController(error) * 12 / 19
-                sendBackSpeed = 10
+                while timer:
+                    delayTime += 1
+                    print('Delay time: ', delayTime)
+                    if delayTime == 2100:
+                        print('Rẽ đi má')
+                        sendBackAngle = - balance.PIDController(error) * 16 / 19
+                        sendBackSpeed = 10
+                        timer = False
+                    elif not sign:
+                        delayTime += 1
             else:
                 error = balance.computeError()
-                sendBackAngle = - balance.PIDController(error) * 6 / 19
-                # x = np.array([-12, -1, -0.25, 0,
-                #               0.25, 1, 12])
-                # y = np.array([0, 10, 25, 55,
-                #               25, 10, 0])
-                #
-                # x = x.reshape(-1, 1)
-                #
-                # regressor = RandomForestRegressor(n_estimators=300, random_state=0)
-                # regressor.fit(np.array(x), np.array(y))
-                #
-                # sendBackSpeed = np.mean(regressor.predict([[sendBackAngle]]))
-                if abs(sendBackAngle) >= 3 and sendBackSpeed >= 10 or abs(error) >= 10:
-                    sendBackSpeed = 10
-                elif abs(sendBackAngle) >= 1:
+                sendBackAngle = - balance.PIDController(error) * 5 / 15
+                if -3 >= sendBackAngle or sendBackAngle >= 3:
+                    sendBackSpeed = -0.1
+                elif -1 <= sendBackAngle <= 1:
                     sendBackSpeed = MAX_SPEED
-                if sendBackSpeed <= 15:
+                if sendBackSpeed < 1 and time.time() - start < 1:
                     sendBackSpeed = MAX_SPEED
-                # else:
-                #     sendBackSpeed = sendBackSpeed - 20
-            print(error)
-            print(sendBackAngle)
-            print(sendBackSpeed)
+            print('Error: ', error)
+            print('Angle: ', sendBackAngle)
+            print('Speed', sendBackSpeed)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 

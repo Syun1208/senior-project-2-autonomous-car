@@ -126,7 +126,6 @@ class imageProcessing:
     def houghLine(self):
         lines = cv2.HoughLinesP(self.canny(), 1, np.pi / 4, 1, np.array([]), minLineLength=10, maxLineGap=10)
         lines1 = []
-        o_d = 65
         lines2 = []
         o_intercept = 0
         h = 0
@@ -157,14 +156,6 @@ class imageProcessing:
             avg1 = np.sum(lines1) / len(lines1)
             d = 80 - avg1
             return d
-        #     if d - o_d < 3:
-        #         o_d = d
-        #         return d
-        #     else:
-        #         return 200
-        # else:
-        #     o_d = 65
-        #     return 200
 
     def houghLineTurnRight(self):
         pass

@@ -32,11 +32,9 @@ class detection:
                         coordinateRecognition = 'carleft'
                     coordinateDetection.name[0] = 'carright'
                     coordinateRecognition = 'carright'
-                elif coordinateRecognition == 'unknown':
-                    coordinateDetection.name[0] = 'unknown'
+                # elif coordinateRecognition == 'unknown':
+                #     coordinateDetection.name[0] = 'unknown'
                 if coordinateRecognition is None and coordinateDetection.name[0] is None:
                     coordinateRecognition = 'empty'
                     coordinateDetection.name[0] = 'empty'
                 return list([coordinateRecognition, coordinateDetection.name[0], bboxSize])
-        # else:
-        #     return None
