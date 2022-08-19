@@ -13,9 +13,9 @@ class Controller(imageProcessing):
         self.time = startTime
         self.timeCar = timeCar
         self.currentSpeed = currentSpeed
-        self.p = 0.32
+        self.p = 0.15
         self.i = 0
-        self.d = 0.2
+        self.d = 2.5
         self.error_arr = np.zeros(5)
         self.arr_normal = []
         if sign is None:
@@ -132,31 +132,25 @@ class Controller(imageProcessing):
     def trafficSignsControllerByCropImage(self):
         if self.sign == 'straight':
             self.mask = self.ROIStraight()
-            cv2.imshow('Sign', self.mask)
             return self.mask
         elif self.sign == 'turnright':
             self.mask = self.ROITurnRight()
-            cv2.imshow('Sign', self.mask)
             return self.mask
 
         elif self.sign == 'turnleft':
             self.mask = self.ROITurnLeft()
-            cv2.imshow('Sign', self.mask)
             return self.mask
 
-        elif self.mask == 'nostraight':
+        elif self.sign == 'nostraight':
             self.mask = self.ROINoStraight()
-            cv2.imshow('Sign', self.mask)
             return self.mask
 
         elif self.sign == 'noright':
             self.mask = self.ROINoRight()
-            cv2.imshow('Sign', self.mask)
             return self.mask
 
         elif self.sign == 'noleft':
             self.mask = self.ROITurnLeft()
-            cv2.imshow('Sign', self.mask)
             return self.mask
-        elif self.sign is None:
+        elif self.sign == 'empty':
             return self.mask

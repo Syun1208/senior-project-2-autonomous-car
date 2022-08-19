@@ -14,18 +14,19 @@ from Datasets.Dataloader import Map
 
 # from sklearn.ensemble import RandomForestRegressor
 
-global M, t0
+global M
 
 
 def main():
-    global M, t0
+    global M
     currentAngle = 0
     currentSpeed = 0
     sendBackSpeed = 0
     sendBackAngle = 0
     MAX_SPEED = 50
     delaySign = None
-    delayTime = 0
+    delayTime = 4
+    t0 = 0
     pretrainedModel = weights()
     predictedUNET = pretrainedModel.modelUNET()
     predictedYOLOv5m = pretrainedModel.modelYOLOv5m()
@@ -93,16 +94,19 @@ def main():
                 pretrainedUNET = balance.trafficSignsControllerByCropImage()
                 balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
                 error = balance.computeError()
-                sendBackAngle = - balance.PIDController(error) * 18 / 60
                 delaySign = sign
                 t0 = time.time()
             else:
-                pretrainedUNET = balance.trafficSignsControllerByCropImage()
-                balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
-                error = balance.computeError()
+                if delaySign:
+                    pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                    balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
+                    error = balance.computeError()
+                else:
+                    error = balance.computeError()
                 if time.time() - t0 >= delayTime:
                     delaySign = None
             sendBackAngle = - balance.PIDController(error) * 18 / 60
+            cv2.imshow('Origin mask', pretrainedUNET)
             print('Error: ', error)
             print('Angle: ', sendBackAngle)
             print('Speed', sendBackSpeed)
