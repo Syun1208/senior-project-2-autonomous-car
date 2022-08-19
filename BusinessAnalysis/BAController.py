@@ -22,7 +22,7 @@ class Controller(imageProcessing):
             self.sign = 'empty'
             self.bboxSize = 0
         else:
-            self.sign = sign[0]
+            self.sign = sign[1]
             self.bboxSize = sign[2]
         self.center = 0
         self.width = np.zeros(10)
@@ -132,25 +132,31 @@ class Controller(imageProcessing):
     def trafficSignsControllerByCropImage(self):
         if self.sign == 'straight':
             self.mask = self.ROIStraight()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
         elif self.sign == 'turnright':
             self.mask = self.ROITurnRight()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
 
         elif self.sign == 'turnleft':
             self.mask = self.ROITurnLeft()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
 
         elif self.sign == 'nostraight':
             self.mask = self.ROINoStraight()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
 
         elif self.sign == 'noright':
             self.mask = self.ROINoRight()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
 
         elif self.sign == 'noleft':
-            self.mask = self.ROITurnLeft()
+            self.mask = self.ROINoLeft()
+            cv2.imshow('Cropped mask', self.mask)
             return self.mask
-        elif self.sign == 'empty':
+        elif self.sign == 'empty' or self.sign == 'unknown':
             return self.mask

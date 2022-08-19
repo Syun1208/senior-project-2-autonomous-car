@@ -25,7 +25,8 @@ def main():
     sendBackAngle = 0
     MAX_SPEED = 50
     delaySign = None
-    delayTime = 4
+    delayTime = 2
+    count = 0
     t0 = 0
     pretrainedModel = weights()
     predictedUNET = pretrainedModel.modelUNET()
@@ -41,16 +42,16 @@ def main():
             pretrainedUNET = modelUNET.predict(predictedUNET)
             IP = imageProcessing(pretrainedUNET)
             pretrainedUNET = IP.removeSmallContours()
+            cv2.imshow('Origin mask', pretrainedUNET)
             modelYOLOv5m = detection(image)
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             '''-------------------------Controller----------------------------'''
-            sendBackSpeed = 20
-            print('CNN: ', sign)
+            sendBackSpeed = 60
             preTime = time.time()
             balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
-            Min, Max = balance.checkLane()
-            print('Min: ', Min)
-            print('Max: ', Max)
+            # Min, Max = balance.checkLane()
+            # print('Min: ', Min)
+            # print('Max: ', Max)
             # if sign:
             #     print('CNN: ', sign[0])
             #     error = balance.trafficSignsController()
@@ -94,22 +95,28 @@ def main():
                 pretrainedUNET = balance.trafficSignsControllerByCropImage()
                 balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
                 error = balance.computeError()
-                delaySign = sign
+                sendBackAngle = - balance.PIDController(error) * 35 / 60
+                delaySign = sign[1]
                 t0 = time.time()
             else:
                 if delaySign:
+                    sendBackSpeed = 0
                     pretrainedUNET = balance.trafficSignsControllerByCropImage()
                     balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
                     error = balance.computeError()
+                    sendBackAngle = - balance.PIDController(error) * 35 / 60
                 else:
                     error = balance.computeError()
+                    sendBackAngle = - balance.PIDController(error) * 18 / 60
                 if time.time() - t0 >= delayTime:
                     delaySign = None
-            sendBackAngle = - balance.PIDController(error) * 18 / 60
-            cv2.imshow('Origin mask', pretrainedUNET)
-            print('Error: ', error)
-            print('Angle: ', sendBackAngle)
-            print('Speed', sendBackSpeed)
+                    t0 = 0
+            print('CNN: ', sign)
+            print('Delay Sign: ', delaySign)
+            print('=====================')
+            # print('Error: ', error)
+            # print('Angle: ', sendBackAngle)
+            # print('Speed', sendBackSpeed)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
