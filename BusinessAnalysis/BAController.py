@@ -1,6 +1,7 @@
 from BusinessAnalysis.BAImageProcessing import imageProcessing
 import numpy as np
 import time
+import cv2
 
 '''Objective: return error and sendBackSpeed'''
 
@@ -14,14 +15,14 @@ class Controller(imageProcessing):
         self.currentSpeed = currentSpeed
         self.p = 0.32
         self.i = 0
-        self.d = 0.1
+        self.d = 0.2
         self.error_arr = np.zeros(5)
         self.arr_normal = []
         if sign is None:
             self.sign = 'empty'
             self.bboxSize = 0
         else:
-            self.sign = sign[1]
+            self.sign = sign[0]
             self.bboxSize = sign[2]
         self.center = 0
         self.width = np.zeros(10)
@@ -60,40 +61,38 @@ class Controller(imageProcessing):
         self.error_arr[0] = error
         P = error * self.p
         delta_t = time.time() - self.time
-        print('PID Time: ', delta_t)
         self.time = time.time()
         D = (error - self.error_arr[1]) / delta_t * self.d
         I = np.sum(self.error_arr) * delta_t * self.i
         angle = P + I + D
         if abs(angle) > 5:
-            angle = np.sign(angle) * 30
+            angle = np.sign(angle) * 35
         return int(angle)
 
     def turnLeft(self):
         Min, Max = self.checkLane()
         self.speedDecrease()
         # if time.time() - self.timeCar >= 3 or self.bboxSize >= 3000 or self.houghLine() <= 65:
-        self.center = int((Min + Max) * 1 / 8)
+        self.center = int((Min + Max) * 1 / 10)
         return self.center
 
     def turnRight(self):
         Min, Max = self.checkLane()
-        if time.time() - self.timeCar <= 0.1 or self.bboxSize >= 1200 or self.houghLine() <= 70:
-            self.speedDecrease()
-            self.center = int(Min + Max) * 3 / 4
+        self.speedDecrease()
+        self.center = int(Min + Max) * 3 / 12
         return self.center
 
     def straight(self):
         Min, Max = self.checkLane()
-        # if 100 <= Max <= 150 and 2 <= Min <= 70:
-        #     self.width[1:] = self.width[0:-1]
-        #     if Max - Min > 60:
-        #         self.width[0] = Max - Min
-        # widthRoad = np.average(self.width)
-        # if Max < 105 and 25 <= Min <= 55 or Max >= 120 and 25 <= Min <= 55:
-        #     self.center = Min + int(widthRoad / 2)
-        # elif Min >= 55 and 105 <= Max <= 120 or Min < 25 and 105 <= Max <= 120:
-        #     self.center = Max - int(widthRoad / 2)
+        if 100 <= Max <= 150 and 2 <= Min <= 70:
+            self.width[1:] = self.width[0:-1]
+            if Max - Min > 60:
+                self.width[0] = Max - Min
+        widthRoad = np.average(self.width)
+        if Max < 105 and 25 <= Min <= 55 or Max >= 120 and 25 <= Min <= 55:
+            self.center = Min + int(widthRoad / 2)
+        elif Min >= 55 and 105 <= Max <= 120 or Min < 25 and 105 <= Max <= 120:
+            self.center = Max - int(widthRoad / 2)
         self.center = int(Min + Max) / 2
         return self.center
 
@@ -107,13 +106,12 @@ class Controller(imageProcessing):
         return self.center
 
     def speedDecrease(self):
-        self.currentSpeed = -5
+        self.currentSpeed = -2
 
     def speedIncrease(self):
         self.currentSpeed = 90
 
     def trafficSignsController(self):
-        distance = self.houghLine()
         Min, Max = self.checkLane()
         if self.sign != 'straight' or self.sign == 'nostraight':
             self.speedDecrease()
@@ -126,9 +124,39 @@ class Controller(imageProcessing):
         else:
             self.speedDecrease()
             if self.sign == 'noright' or self.sign == 'noleft' or self.sign == 'unknown' or not self.sign:
-                if time.time() - self.timeCar >= 5:
-                    self.speedIncrease()
-                    self.center = self.straight()
-        print('Center: ', self.center)
+                self.speedIncrease()
+                self.center = self.straight()
         self.error = int(self.mask.shape[1] / 2) - self.center
         return self.error
+
+    def trafficSignsControllerByCropImage(self):
+        if self.sign == 'straight':
+            self.mask = self.ROIStraight()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+        elif self.sign == 'turnright':
+            self.mask = self.ROITurnRight()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+
+        elif self.sign == 'turnleft':
+            self.mask = self.ROITurnLeft()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+
+        elif self.mask == 'nostraight':
+            self.mask = self.ROINoStraight()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+
+        elif self.sign == 'noright':
+            self.mask = self.ROINoRight()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+
+        elif self.sign == 'noleft':
+            self.mask = self.ROITurnLeft()
+            cv2.imshow('Sign', self.mask)
+            return self.mask
+        elif self.sign is None:
+            return self.mask

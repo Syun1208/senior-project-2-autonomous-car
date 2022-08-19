@@ -14,16 +14,18 @@ from Datasets.Dataloader import Map
 
 # from sklearn.ensemble import RandomForestRegressor
 
-global M
+global M, t0
 
 
 def main():
-    global M
+    global M, t0
     currentAngle = 0
     currentSpeed = 0
     sendBackSpeed = 0
     sendBackAngle = 0
     MAX_SPEED = 50
+    delaySign = None
+    delayTime = 0
     pretrainedModel = weights()
     predictedUNET = pretrainedModel.modelUNET()
     predictedYOLOv5m = pretrainedModel.modelYOLOv5m()
@@ -38,38 +40,69 @@ def main():
             pretrainedUNET = modelUNET.predict(predictedUNET)
             IP = imageProcessing(pretrainedUNET)
             pretrainedUNET = IP.removeSmallContours()
-            print('Distances: ', IP.houghLine())
             modelYOLOv5m = detection(image)
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             '''-------------------------Controller----------------------------'''
-            sendBackSpeed = 50
+            sendBackSpeed = 20
             print('CNN: ', sign)
             preTime = time.time()
-            timer = True
-            delayTime = 0
             balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
+            Min, Max = balance.checkLane()
+            print('Min: ', Min)
+            print('Max: ', Max)
+            # if sign:
+            #     print('CNN: ', sign[0])
+            #     error = balance.trafficSignsController()
+            #     if sign[1] != 'straight' or sign[1] != 'carleft' or sign[1] != 'carright' or sign[1] != 'unknown':
+            #         while timer:
+            #             delayTime += 1
+            #             print('Delay time: ', delayTime)
+            #             if delayTime == 2300 and sign[2] > 4600:
+            #                 print('Rẽ đi má')
+            #                 sendBackAngle = - balance.PIDController(error) * 16 / 19
+            #                 timer = False
+            #             elif not sign:
+            #                 delayTime += 1
+            #         if Min <= 5 or Max >= 150:
+            #             sendBackSpeed = -1
+            #             error = balance.computeError()
+            #             sendBackAngle = - balance.PIDController(error) * 8 / 19
+            #         else:
+            #             sendBackSpeed = MAX_SPEED
+            #     else:
+            #         sendBackSpeed = -1
+            #         sendBackAngle = - balance.PIDController(error) * 12 / 19
+            # else:
+            #     error = balance.computeError()
+            #     if Min <= 1 or Max >= 155:
+            #         sendBackSpeed = -1
+            #         sendBackAngle = - balance.PIDController(error) * 10 / 19
+            #     else:
+            #         sendBackAngle = - balance.PIDController(error) * 5 / 19
+            #     if -4 >= sendBackAngle or sendBackAngle >= 4:
+            #         sendBackSpeed = -1
+            #     elif -1 <= sendBackAngle <= 1:
+            #         sendBackSpeed = MAX_SPEED
+            #     if sendBackSpeed < 1 and time.time() - start < 2:
+            #         sendBackSpeed = MAX_SPEED
+            # if Min <= 1 and Max >= 155:
+            #     sendBackSpeed = -3
+            #     error = balance.computeError()
+            #     sendBackAngle = - balance.PIDController(error) * 16 / 19
             if sign:
-                sendBackSpeed = -5
-                error = balance.trafficSignsController()
-                while timer:
-                    delayTime += 1
-                    print('Delay time: ', delayTime)
-                    if delayTime == 2100:
-                        print('Rẽ đi má')
-                        sendBackAngle = - balance.PIDController(error) * 16 / 19
-                        sendBackSpeed = 10
-                        timer = False
-                    elif not sign:
-                        delayTime += 1
-            else:
+                pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
                 error = balance.computeError()
-                sendBackAngle = - balance.PIDController(error) * 5 / 15
-                if -3 >= sendBackAngle or sendBackAngle >= 3:
-                    sendBackSpeed = -0.1
-                elif -1 <= sendBackAngle <= 1:
-                    sendBackSpeed = MAX_SPEED
-                if sendBackSpeed < 1 and time.time() - start < 1:
-                    sendBackSpeed = MAX_SPEED
+                sendBackAngle = - balance.PIDController(error) * 18 / 60
+                delaySign = sign
+                t0 = time.time()
+            else:
+                pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
+                error = balance.computeError()
+                if time.time() - t0 >= delayTime:
+                    delaySign = None
+            sendBackAngle = - balance.PIDController(error) * 18 / 60
             print('Error: ', error)
             print('Angle: ', sendBackAngle)
             print('Speed', sendBackSpeed)

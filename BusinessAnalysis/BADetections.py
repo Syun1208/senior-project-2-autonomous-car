@@ -17,7 +17,7 @@ class detection:
         coordinateDetection = resultsDetection.pandas().xyxy[0]
         '''Calculate predicted bounding box'''
         if len(coordinateDetection) != 0:
-            if float(coordinateDetection.confidence[0]) >= 0.9:
+            if float(coordinateDetection.confidence[0]) >= 0.85:
                 x_min = int(resultsDetection.xyxy[0][0][0])
                 y_min = int(resultsDetection.xyxy[0][0][1])
                 x_max = int(resultsDetection.xyxy[0][0][2])
