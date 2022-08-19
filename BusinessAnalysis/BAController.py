@@ -22,7 +22,7 @@ class Controller(imageProcessing):
             self.sign = 'empty'
             self.bboxSize = 0
         else:
-            self.sign = sign[1]
+            self.sign = sign[0]
             self.bboxSize = sign[2]
         self.center = 0
         self.width = np.zeros(10)
@@ -31,6 +31,19 @@ class Controller(imageProcessing):
     def checkLane(self):
         height = 18
         lineRow = self.mask[height, :]
+        for x, y in enumerate(lineRow):
+            if y == 255:
+                self.arr_normal.append(x)
+        if not self.arr_normal:
+            self.arr_normal = [50, 110]
+        Min_Normal = min(self.arr_normal)
+        Max_Normal = max(self.arr_normal)
+
+        return Min_Normal, Max_Normal
+
+    def checkCuttingLane(self, mask):
+        height = 18
+        lineRow = mask[height, :]
         for x, y in enumerate(lineRow):
             if y == 255:
                 self.arr_normal.append(x)
@@ -98,11 +111,10 @@ class Controller(imageProcessing):
 
     def obstacleAvoiding(self):
         Min, Max = self.checkLane()
-        self.speedDecrease()
         if self.sign == 'carright':
-            self.center = int(Min + Max) * 3 / 8
+            self.center = int((Min + Max) * 3 / 8)
         elif self.sign == 'carleft':
-            self.center = int(Min + Max) * 1 / 8
+            self.center = int((Min + Max) * 1 / 8)
         return self.center
 
     def speedDecrease(self):
@@ -130,33 +142,32 @@ class Controller(imageProcessing):
         return self.error
 
     def trafficSignsControllerByCropImage(self):
-        if self.sign == 'straight':
-            self.mask = self.ROIStraight()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
-        elif self.sign == 'turnright':
-            self.mask = self.ROITurnRight()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
+        if self.sign != 'carright' or self.sign != 'carleft':
+            if self.sign == 'straight':
+                self.mask = self.ROIStraight()
+                cv2.imshow('Cropped mask', self.mask)
+            elif self.sign == 'turnright':
+                self.mask = self.ROITurnRight()
+                cv2.imshow('Cropped mask', self.mask)
 
-        elif self.sign == 'turnleft':
-            self.mask = self.ROITurnLeft()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
+            elif self.sign == 'turnleft':
+                self.mask = self.ROITurnLeft()
+                cv2.imshow('Cropped mask', self.mask)
 
-        elif self.sign == 'nostraight':
-            self.mask = self.ROINoStraight()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
+            elif self.sign == 'nostraight':
+                self.mask = self.ROINoStraight()
+                cv2.imshow('Cropped mask', self.mask)
 
-        elif self.sign == 'noright':
-            self.mask = self.ROINoRight()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
+            elif self.sign == 'noright':
+                self.mask = self.ROINoRight()
+                cv2.imshow('Cropped mask', self.mask)
 
-        elif self.sign == 'noleft':
-            self.mask = self.ROINoLeft()
-            cv2.imshow('Cropped mask', self.mask)
-            return self.mask
-        elif self.sign == 'empty' or self.sign == 'unknown':
-            return self.mask
+            elif self.sign == 'noleft':
+                self.mask = self.ROINoLeft()
+                cv2.imshow('Cropped mask', self.mask)
+            Min, Max = self.checkCuttingLane(self.mask)
+            self.center = int((Min + Max) / 2)
+        else:
+            self.center = self.obstacleAvoiding()
+        self.error = int(self.mask.shape[1] / 2) - self.center
+        return self.error

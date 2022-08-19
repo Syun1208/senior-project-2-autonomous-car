@@ -23,9 +23,11 @@ def main():
     currentSpeed = 0
     sendBackSpeed = 0
     sendBackAngle = 0
-    MAX_SPEED = 50
+    MAX_SPEED = 60
+    SAVE_SPEED = 50
     delaySign = None
-    delayTime = 2
+    signArr = np.zeros(5)
+    delayTime = 3
     count = 0
     t0 = 0
     pretrainedModel = weights()
@@ -46,7 +48,7 @@ def main():
             modelYOLOv5m = detection(image)
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             '''-------------------------Controller----------------------------'''
-            sendBackSpeed = 60
+            sendBackSpeed = 40
             preTime = time.time()
             balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
             # Min, Max = balance.checkLane()
@@ -92,31 +94,59 @@ def main():
             #     error = balance.computeError()
             #     sendBackAngle = - balance.PIDController(error) * 16 / 19
             if sign:
-                pretrainedUNET = balance.trafficSignsControllerByCropImage()
-                balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
-                error = balance.computeError()
+                # if sign != 'carright' or sign != 'carleft':
+                #     pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                #     balance = Controller(pretrainedUNET, start, sendBackSpeed, sign, preTime)
+                #     error = balance.computeError()
+                #     sendBackAngle = - balance.PIDController(error) * 35 / 60
+                # else:
+                #     center = balance.obstacleAvoiding()
+                #     error = int(pretrainedUNET.shape[1] / 2) - center
+                #     sendBackAngle = - balance.PIDController(error) * 18 / 60
+                sendBackSpeed = -1
+                error = balance.trafficSignsControllerByCropImage()
                 sendBackAngle = - balance.PIDController(error) * 35 / 60
-                delaySign = sign[1]
                 t0 = time.time()
+                delaySign = sign[1]
             else:
-                if delaySign:
-                    sendBackSpeed = 0
-                    pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                if delaySign is str or delaySign is not None:
+                    sendBackSpeed = -1
                     balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
-                    error = balance.computeError()
+                    error = balance.trafficSignsControllerByCropImage()
                     sendBackAngle = - balance.PIDController(error) * 35 / 60
+                    # if delaySign != 'carright' or delaySign != 'carleft':
+                    #     sendBackSpeed = -1
+                    #     center = balance.obstacleAvoiding()
+                    #     error = int(pretrainedUNET.shape[1] / 2) - center
+                    #     sendBackAngle = - balance.PIDController(error) * 18 / 60
+                    # else:
+                    #     sendBackSpeed = -2
+                    #     print('Dang delay')
+                    #     balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
+                    #     pretrainedUNET = balance.trafficSignsControllerByCropImage()
+                    #     balance = Controller(pretrainedUNET, start, sendBackSpeed, delaySign, preTime)
+                    #     print('Dang delay 1')
+                    #     error = balance.computeError()
+                    #     if delaySign != 'straight':
+                    #         sendBackAngle = - balance.PIDController(error) * 35 / 60
+                    #     else:
+                    #         sendBackAngle = - balance.PIDController(error) * 15 / 60
                 else:
                     error = balance.computeError()
-                    sendBackAngle = - balance.PIDController(error) * 18 / 60
+                    sendBackAngle = - balance.PIDController(error) * 16 / 60
                 if time.time() - t0 >= delayTime:
                     delaySign = None
                     t0 = 0
+            if -4 >= sendBackAngle or sendBackAngle >= 4:
+                sendBackSpeed = -1
+            elif -1 <= sendBackAngle <= 1:
+                sendBackSpeed = MAX_SPEED
+            if sendBackSpeed < 1 and time.time() - start < 2:
+                sendBackSpeed = MAX_SPEED
+            cv2.imshow('Origin mask', pretrainedUNET)
             print('CNN: ', sign)
             print('Delay Sign: ', delaySign)
             print('=====================')
-            # print('Error: ', error)
-            # print('Angle: ', sendBackAngle)
-            # print('Speed', sendBackSpeed)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
