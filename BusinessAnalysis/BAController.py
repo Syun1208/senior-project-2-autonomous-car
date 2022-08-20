@@ -13,9 +13,9 @@ class Controller(imageProcessing):
         self.time = startTime
         self.timeCar = timeCar
         self.currentSpeed = currentSpeed
-        self.p = 0.15
+        self.p = 0.1
         self.i = 0
-        self.d = 2.5
+        self.d = 10
         self.error_arr = np.zeros(5)
         self.arr_normal = []
         if sign is None:
@@ -42,7 +42,7 @@ class Controller(imageProcessing):
         return Min_Normal, Max_Normal
 
     def checkCuttingLane(self, mask):
-        height = 18
+        height = 30
         lineRow = mask[height, :]
         for x, y in enumerate(lineRow):
             if y == 255:
@@ -55,13 +55,13 @@ class Controller(imageProcessing):
         return Min_Normal, Max_Normal
 
     def computeError(self):
-        height = 18
+        height = 25
         lineRow = self.mask[height, :]
         for x, y in enumerate(lineRow):
             if y == 255:
                 self.arr_normal.append(x)
         if not self.arr_normal:
-            self.arr_normal = [50, 110]
+            self.arr_normal = [52, 110]
         Min = min(self.arr_normal)
         Max = max(self.arr_normal)
         self.center = int((Min + Max) / 2)
@@ -69,17 +69,16 @@ class Controller(imageProcessing):
         return self.error
 
     def PIDController(self, error):
-        # global pre_Time
         self.error_arr[1:] = self.error_arr[0:-1]
         self.error_arr[0] = error
         P = error * self.p
         delta_t = time.time() - self.time
         self.time = time.time()
-        D = (error - self.error_arr[1]) / delta_t * self.d
+        D = ((error - self.error_arr[1]) / delta_t) * self.d
         I = np.sum(self.error_arr) * delta_t * self.i
         angle = P + I + D
         if abs(angle) > 5:
-            angle = np.sign(angle) * 35
+            angle = np.sign(angle) * 40
         return int(angle)
 
     def turnLeft(self):
@@ -118,26 +117,21 @@ class Controller(imageProcessing):
         return self.center
 
     def speedDecrease(self):
-        self.currentSpeed = -2
+        self.currentSpeed = -1
 
     def speedIncrease(self):
         self.currentSpeed = 90
 
     def trafficSignsController(self):
-        Min, Max = self.checkLane()
-        if self.sign != 'straight' or self.sign == 'nostraight':
-            self.speedDecrease()
-            if self.sign == 'turnleft' or self.sign == 'noright':
-                self.center = self.turnLeft()
-            elif self.sign == 'turnright' or self.sign == 'noleft':
-                self.center = self.turnRight()
-            else:
-                self.center = self.obstacleAvoiding()
-        else:
-            self.speedDecrease()
-            if self.sign == 'noright' or self.sign == 'noleft' or self.sign == 'unknown' or not self.sign:
-                self.speedIncrease()
+        if self.sign != 'carright' or self.sign != 'carleft':
+            if self.sign == 'straight':
                 self.center = self.straight()
+            elif self.sign == 'turnright' or self.sign == 'nostraight' or self.sign == 'noleft':
+                self.center = self.turnRight()
+            elif self.sign == 'turnleft' or self.sign == 'nostraight' or self.sign == 'noright':
+                var = self.center == self.turnLeft()
+        else:
+            self.center = self.obstacleAvoiding()
         self.error = int(self.mask.shape[1] / 2) - self.center
         return self.error
 

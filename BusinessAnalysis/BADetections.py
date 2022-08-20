@@ -10,14 +10,12 @@ class detection:
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     def predict(self, modelDetection, modelRecognition):
-        # self.image = self.image[125:, :]
         self.image = cv2.resize(self.image, (640, 360))
-        # pretrainedYOLOv5m = weights(self.image)
         resultsDetection = modelDetection(self.image)
         coordinateDetection = resultsDetection.pandas().xyxy[0]
         '''Calculate predicted bounding box'''
         if len(coordinateDetection) != 0:
-            if float(coordinateDetection.confidence[0]) >= 0.85:
+            if float(coordinateDetection.confidence[0]) >= 0.9:
                 x_min = int(resultsDetection.xyxy[0][0][0])
                 y_min = int(resultsDetection.xyxy[0][0][1])
                 x_max = int(resultsDetection.xyxy[0][0][2])
@@ -30,8 +28,9 @@ class detection:
                     if x_max >= 200 and y_max >= 200:
                         coordinateDetection.name[0] = 'carleft'
                         coordinateRecognition = 'carleft'
-                    coordinateDetection.name[0] = 'carright'
-                    coordinateRecognition = 'carright'
+                    else:
+                        coordinateDetection.name[0] = 'carright'
+                        coordinateRecognition = 'carright'
                 # elif coordinateRecognition == 'unknown':
                 #     coordinateDetection.name[0] = 'unknown'
                 if coordinateRecognition is None and coordinateDetection.name[0] is None:
