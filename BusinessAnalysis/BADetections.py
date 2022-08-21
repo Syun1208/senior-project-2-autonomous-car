@@ -24,6 +24,7 @@ class detection:
                 resultsRecognition = recognition(imgBoundingBox)
                 coordinateRecognition = resultsRecognition.predict(modelRecognition)
                 bboxSize = (x_max - x_min) * (y_max - y_min)
+                print('BBox Size: ', bboxSize)
                 if coordinateDetection.name[0] == 'car':
                     if x_max >= 200 and y_max >= 200:
                         coordinateDetection.name[0] = 'carleft'
@@ -31,8 +32,6 @@ class detection:
                     else:
                         coordinateDetection.name[0] = 'carright'
                         coordinateRecognition = 'carright'
-                # elif coordinateRecognition == 'unknown':
-                #     coordinateDetection.name[0] = 'unknown'
                 if coordinateRecognition is None and coordinateDetection.name[0] is None:
                     coordinateRecognition = 'empty'
                     coordinateDetection.name[0] = 'empty'

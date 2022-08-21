@@ -22,7 +22,7 @@ class Controller(imageProcessing):
             self.sign = 'empty'
             self.bboxSize = 0
         else:
-            self.sign = sign[0]
+            self.sign = sign[1]
             self.bboxSize = sign[2]
         self.center = 0
         self.width = np.zeros(10)

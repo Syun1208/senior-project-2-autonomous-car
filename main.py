@@ -147,7 +147,7 @@ def main():
             #         delaySign = None
             #         t0 = 0
             if sign:
-                if sign[1] != 'carleft' or sign[0] != 'carright':
+                if sign[1] != 'carleft' or sign[1] != 'carright':
                     if sign[1] == 'straight':
                         pretrainedUNET = IP.ROIStraight()
                     elif sign[1] == 'turnright':
@@ -200,7 +200,7 @@ def main():
                         error = balance.computeError()
                         sendBackSpeed = 20
                     else:
-                        sendBackSpeed = -3
+                        sendBackSpeed = 0
                         center = balance.obstacleAvoiding()
                         error = int(pretrainedUNET.shape[1] / 2) - center
                     if time.time() - t0 >= delayTime:
@@ -217,7 +217,7 @@ def main():
                         sendBackSpeed = sendBackSpeed - 20
                     elif -1 <= sendBackAngle <= 1:
                         sendBackSpeed = MAX_SPEED
-                    if sendBackSpeed < 1 and time.time() - start < 2:
+                    if sendBackSpeed < 1 and time.time() - start < 10:
                         sendBackSpeed = MAX_SPEED
             cv2.imshow('Origin mask', pretrainedUNET)
             print('CNN: ', sign)
