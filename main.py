@@ -43,7 +43,7 @@ def main():
             sign = modelYOLOv5m.predict(predictedYOLOv5m, predictedCNN)
             print('CNN: ', sign)
             '''-------------------------Controller----------------------------'''
-            balance = Controller(pretrainedUNET, start, currentSpeed, sign, bboxSize=1000)
+            balance = Controller(pretrainedUNET, start, currentSpeed, sign)
             if sign:
                 error = balance.trafficSignsController()
             else:

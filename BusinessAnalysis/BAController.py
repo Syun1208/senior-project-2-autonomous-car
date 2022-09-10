@@ -6,7 +6,7 @@ import time
 
 
 class Controller(imageProcessing):
-    def __init__(self, mask, startTime, currentSpeed, sign, bboxSize):
+    def __init__(self, mask, startTime, currentSpeed, sign):
         super(Controller, self).__init__(mask)
         self.mask = mask
         self.time = startTime
@@ -16,8 +16,12 @@ class Controller(imageProcessing):
         self.d = 0.01
         self.error_arr = np.zeros(5)
         self.arr_normal = []
-        self.sign = sign
-        self.bboxSize = bboxSize
+        if sign is None:
+            self.sign = 'empty'
+            self.bboxSize = 0
+        else:
+            self.sign = sign[1]
+            self.bboxSize = sign[2]
         self.width = np.zeros(10)
 
     def checkLane(self):
