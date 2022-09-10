@@ -1,4 +1,4 @@
-weights/my_checkpoints.pth filter=lfs diff=lfs merge=lfs -text
 yolov5m.pt filter=lfs diff=lfs merge=lfs -text
+weights/my_checkpoints.pth filter=lfs diff=lfs merge=lfs -text
 weights/best.pt filter=lfs diff=lfs merge=lfs -text
 weights/CNN.pth filter=lfs diff=lfs merge=lfs -text
